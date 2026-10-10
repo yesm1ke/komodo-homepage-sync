@@ -1,0 +1,24 @@
+# Runs next to Komodo Core; joins the network Core is on.
+services:
+  komodo-homepage-sync:
+    image: ghcr.io/yesm1ke/komodo-homepage-sync:0.1
+    restart: unless-stopped
+    environment:
+      KOMODO_URL: http://komodo-core:9120
+      KOMODO_API_KEY_FILE: /run/secrets/komodo_api_key
+      KOMODO_API_SECRET_FILE: /run/secrets/komodo_api_secret
+      AUTH_TOKEN_FILE: /run/secrets/auth_token
+    secrets:
+      - komodo_api_key
+      - komodo_api_secret
+      - auth_token
+    ports:
+      - 2375:2375
+
+secrets:
+  komodo_api_key:
+    file: ./secrets/komodo_api_key
+  komodo_api_secret:
+    file: ./secrets/komodo_api_secret
+  auth_token:
+    file: ./secrets/auth_token
