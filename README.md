@@ -10,8 +10,9 @@ Komodo already knows every container on every server. `komodo-homepage-sync` rea
 |---|---|
 | `GET /containers/json` | Containers that have `homepage.*` labels: id, name, image, state, status and **only** the `homepage.*` labels. Supports `all` and the `health` filter Homepage uses for status dots. |
 | `GET /containers/{id}/stats` | CPU, memory and network numbers taken from Komodo, if it reports them. |
+| `GET /containers/{id or name}/json` | A minimal inspect for Homepage v1 status dots: `Id`, `Name` and `State` (status, health). Nothing else. |
 | `GET /_ping`, `GET /version` | Liveness. |
-| anything else | `404` / `405`. No inspect, logs, exec, env, mounts or commands. |
+| anything else | `404` / `405`. No full inspect, logs, exec, env, mounts or commands. |
 
 ```
  home network                                              anywhere
@@ -99,7 +100,7 @@ Every variable can be read from a file by appending `_FILE`, e.g. `KOMODO_API_SE
 
 ## Compatibility
 
-Built against Komodo v2.3 (`ListAllContainers`, `InspectContainer`) and Homepage v2.4. The service has no dependencies beyond the Python standard library.
+Built against Komodo v2.3 (`ListAllContainers`, `InspectContainer`). Works with Homepage v1.x and v2.x. The service has no dependencies beyond the Python standard library.
 
 ## License
 

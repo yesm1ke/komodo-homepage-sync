@@ -30,7 +30,7 @@ HEALTH_STATES = ("healthy", "unhealthy", "starting")
 # {{HOMEPAGE_VAR_*}} / {{HOMEPAGE_FILE_*}} itself, so those references pass.
 SECRET_KEY_RE = re.compile(r"(^|[._])(key|apikey|api_key|password|pass|secret|token)$", re.I)
 API_PATH_RE = re.compile(r"^(?:/v[0-9.]+)?(/.*)$")
-STATS_PATH_RE = re.compile(r"^/containers/([^/]+)/stats$")
+CONTAINER_PATH_RE = re.compile(r"^/containers/([^/]+)/(json|stats)$")
 SIZE_RE = re.compile(r"^\s*([0-9.]+)\s*([a-zA-Z]*)\s*$")
 UNITS = {
     "": 1, "b": 1,
@@ -161,9 +161,29 @@ class Inventory:
             items = [c for c in items if c["_health"] in health]
         return [{k: v for k, v in c.items() if not k.startswith("_")} for c in items]
 
-    def stats(self, cid):
+    def find(self, ref):
+        """Container by id, id prefix or exposed name (with or without the leading slash)."""
+        name = "/" + ref.lstrip("/")
         with self.lock:
-            return self.stats_by_id.get(cid)
+            for c in self.containers:
+                if c["Id"] == ref or name in c["Names"] or (len(ref) >= 12 and c["Id"].startswith(ref)):
+                    return c
+        return None
+
+    def inspect(self, ref):
+        """Minimal inspect for Homepage v1 status dots: state and health only."""
+        c = self.find(ref)
+        if c is None:
+            return None
+        state = {"Status": c["State"], "Running": c["State"] == "running"}
+        if c["_health"]:
+            state["Health"] = {"Status": c["_health"]}
+        return {"Id": c["Id"], "Name": c["Names"][0], "State": state}
+
+    def stats(self, ref):
+        c = self.find(ref)
+        with self.lock:
+            return self.stats_by_id.get(c["Id"]) if c else None
 
     def run(self, interval):
         while True:
@@ -213,12 +233,13 @@ def make_handler(inventory, token=None):
                     except ValueError:
                         return self.send_json(400, {"message": "invalid filters"})
                 return self.send_json(200, inventory.list(all_, health))
-            m = STATS_PATH_RE.match(path)
+            m = CONTAINER_PATH_RE.match(path)
             if m:
-                stats = inventory.stats(m.group(1))
-                if stats is None:
-                    return self.send_json(404, {"message": "no stats for container"})
-                return self.send_json(200, stats)
+                ref, what = m.groups()
+                body = inventory.inspect(ref) if what == "json" else inventory.stats(ref)
+                if body is None:
+                    return self.send_json(404, {"message": f"no such container: {ref}"})
+                return self.send_json(200, body)
             return self.send_json(404, {"message": "not supported"})
 
         def do_POST(self):

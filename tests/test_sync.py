@@ -109,13 +109,20 @@ class HttpTest(unittest.TestCase):
         f = urllib.request.quote(json.dumps({"health": ["healthy"]}))
         self.assertEqual([c["Id"] for c in self.get(f"/containers/json?all=1&filters={f}")[1]], ["aaa"])
 
-    def test_inspect_logs_exec_and_writes_are_refused(self):
-        self.assertEqual(self.get("/containers/aaa/json")[0], 404)
+    def test_minimal_inspect_by_name_has_state_only(self):
+        code, body = self.get("/containers/infra.core/json")
+        self.assertEqual(code, 200)
+        self.assertEqual(body, {"Id": "aaa", "Name": "/infra.core",
+                                "State": {"Status": "running", "Running": True, "Health": {"Status": "healthy"}}})
+        self.assertEqual(self.get("/containers/infra.mongo/json")[0], 404)  # unlabelled stays hidden
+
+    def test_logs_exec_and_writes_are_refused(self):
         self.assertEqual(self.get("/containers/aaa/logs")[0], 404)
         self.assertEqual(self.get("/containers/aaa/exec", method="POST")[0], 405)
 
     def test_stats(self):
         self.assertEqual(self.get("/containers/aaa/stats?stream=false")[0], 200)
+        self.assertEqual(self.get("/containers/infra.core/stats?stream=false")[0], 200)
         self.assertEqual(self.get("/containers/ccc/stats?stream=false")[0], 404)
 
 
