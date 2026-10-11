@@ -100,6 +100,10 @@ class HttpTest(unittest.TestCase):
     def test_requires_token(self):
         self.assertEqual(self.get("/containers/json", token=None)[0], 401)
 
+    def test_ping_without_token(self):
+        self.assertEqual(self.get("/_ping", token=None)[0], 200)
+        self.assertEqual(self.get("/version", token=None)[0], 401)
+
     def test_list_with_api_version_prefix(self):
         code, body = self.get("/v1.41/containers/json?all=1")
         self.assertEqual(code, 200)

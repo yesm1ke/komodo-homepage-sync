@@ -20,7 +20,7 @@ import urllib.request
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import parse_qs, urlparse
 
-__version__ = "0.1.0"
+__version__ = "0.1.1"
 
 log = logging.getLogger("komodo-homepage-sync")
 
@@ -212,14 +212,16 @@ def make_handler(inventory, token=None):
             self.wfile.write(data)
 
         def do_GET(self):
-            if token and self.headers.get("Authorization") != f"Bearer {token}":
-                return self.send_json(401, {"message": "unauthorized"})
             url = urlparse(self.path)
             path = API_PATH_RE.match(url.path).group(1)
             query = parse_qs(url.query)
 
+            # Liveness needs no token, like Docker's own /_ping: the image's
+            # HEALTHCHECK can't know it.
             if path == "/_ping":
                 return self.send_json(200, "OK")
+            if token and self.headers.get("Authorization") != f"Bearer {token}":
+                return self.send_json(401, {"message": "unauthorized"})
             if path == "/version":
                 return self.send_json(200, {"Version": __version__, "ApiVersion": "1.41", "Os": "komodo"})
             if path == "/containers/json":

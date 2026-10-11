@@ -11,7 +11,7 @@ Komodo already knows every container on every server. `komodo-homepage-sync` rea
 | `GET /containers/json` | Containers that have `homepage.*` labels: id, name, image, state, status and **only** the `homepage.*` labels. Supports `all` and the `health` filter Homepage uses for status dots. |
 | `GET /containers/{id}/stats` | CPU, memory and network numbers taken from Komodo, if it reports them. |
 | `GET /containers/{id or name}/json` | A minimal inspect for Homepage v1 status dots: `Id`, `Name` and `State` (status, health). Nothing else. |
-| `GET /_ping`, `GET /version` | Liveness. |
+| `GET /_ping`, `GET /version` | Liveness. `/_ping` needs no token (the image's healthcheck uses it). |
 | anything else | `404` / `405`. No full inspect, logs, exec, env, mounts or commands. |
 
 ```
