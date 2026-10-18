@@ -1,5 +1,7 @@
 # komodo-homepage-sync
 
+[![Ko-fi](https://img.shields.io/badge/Ko--fi-support-FF5E5B?logo=ko-fi&logoColor=white)](https://ko-fi.com/mike_g)
+
 Auto-discover services for [Homepage](https://gethomepage.dev) from container labels across all servers managed by [Komodo](https://komo.do), without exposing any Docker socket.
 
 Homepage can build its dashboard from `homepage.*` container labels, but only by talking to the Docker API of every host, usually through a socket proxy. Even a read-only proxy hands out `docker inspect`, which includes every container's environment variables and therefore its secrets.
